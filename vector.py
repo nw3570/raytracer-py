@@ -63,6 +63,12 @@ class Vector3:
             self.x * other.y - self.y * other.x,
         )
 
+    def hadamard(other):
+        return Vector3(
+            self.x * other.x,
+            self.y * other.y,
+            self.z * other.z
+        )
     # ---------- comprimento ----------
 
     def length_squared(self):
