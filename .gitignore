@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Arquivos de entrada e saída
+out/
+in/
+*.ppm
+*.obj
