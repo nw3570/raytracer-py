@@ -60,3 +60,6 @@ def phong(lights, ambient_light_color, point, normal, eye, material):
         )
     
     return ambient + diffuse + specular
+
+def normal_shade(normal):
+    return 0.5 * (normal + Vector3(1.0, 1.0, 1.0))

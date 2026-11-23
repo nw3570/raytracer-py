@@ -28,6 +28,12 @@ class Vector3:
         yield self.y
         yield self.z
 
+    def __getitem__(self, i):
+        if i == 0: return self.x
+        if i == 1: return self.y
+        if i == 2: return self.x
+
+        return None
     # ---------- soma, subtração e negação ----------
 
     def __add__(self, other):
@@ -94,6 +100,22 @@ class Vector3:
     def lerp(self, other, t):
         """Interpola linearmente entre dois vetores (t entre 0 e 1)."""
         return self + (other - self) * t
+
+    def clamp(self, min, max):
+        if self.x > max:
+            self.x = max
+        elif self.x < min:
+            self.x = min
+
+        if self.y > max:
+            self.y = max
+        elif self.y < min:
+            self.y = min
+
+        if self.z > max:
+            self.z = max
+        elif self.z < min:
+            self.z = min
 
     @staticmethod
     def zero():
