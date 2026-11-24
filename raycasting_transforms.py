@@ -2,6 +2,8 @@ import math
 from vector import Vector3
 import numpy as np
 
+EPSILON = 1e-8
+
 def tonumpy(p: Vector3, w = 1):
     return np.array([p.x, p.y, p.z, w])
 
@@ -104,11 +106,79 @@ class Hit:
         self.point = point
         self.normal = normal
 
+class TriangularMesh:
+    def __init__(self, v, vn, fv, fvn, mat):
+        self.vertices = v
+        self.normals = vn
+        self.vertices_idx = fv
+        self.normals_idx = fvn
+        self.material = mat
+
+    @staticmethod
+    def _moller_trumbore(ray, a, b, c):
+        edge1 = b - a
+        edge2 = c - a
+
+        p = ray.direction.cross(edge2)
+        det = p.dot(edge1)
+
+        if abs(det) < EPSILON:
+            return None
+
+        inv_det = 1.0 / det
+        s = ray.origin - a
+        u = inv_det * p.dot(s)
+
+        if u < -EPSILON or u > 1.0 + EPSILON:
+            return None
+
+        q = s.cross(edge1)
+        v = inv_det * q.dot(ray.direction)
+
+        if v < -EPSILON or v + u >  1.0 + EPSILON:
+            return None
+
+        t = inv_det * edge2.dot(q)
+        return u, v, t
+
+
+    def hit(self, ray):
+        nfaces = len(self.vertices_idx) // 3
+        hits = []
+
+        for i in range(0, nfaces):
+            idx_start = 3 * i
+            idx_end = idx_start + 3
+
+            v0, v1, v2 = self.vertices_idx[idx_start : idx_end]
+            res = TriangularMesh._moller_trumbore(
+                ray,
+                self.vertices[v0], self.vertices[v1], self.vertices[v2]
+            )
+
+            if res is None:
+                continue
+
+            u, v, t = res
+            w = 1.0 - u - v
+
+            n0, n1, n2 = self.normals_idx[idx_start : idx_end]
+            normal = (
+                u * self.normals[n1]
+                + v * self.normals[n2]
+                + w * self.normals[n0]
+            ).normalized()
+
+            hits.append(Hit(t, ray.at(t), normal))
+
+        return hits
+
 class Sphere:
     def __init__(self, name, pos, r, mat):
         self.r = r
         self.name = name
         self.material = mat
+ 
         self.model = np.eye(4)
         self.model[0, 3] = pos.x
         self.model[1, 3] = pos.y
@@ -180,6 +250,8 @@ class Ray:
         self.origin = origin
         self.direction = direction
 
+    def at(self, t):
+        return self.origin + (self.direction * t)
 
 def raycasting(img, camera, scene, background=None):
     if background is None:
@@ -240,36 +312,33 @@ def save_img(path, img):
             f.write("\n")
 
 
-light = Light(Vector3(0, 10, -50), [0.9, 0.9, 0.9, 1])
-envlight = [1, 1, 1, 1]
-scene = [Sphere("esfera", Vector3(0, 0, 0), 1, Material([1, 0, 0, 1], 0.4, 1, 1) )]
-plan = Plan("plano", Vector3(0, -1, 0), Vector3(0.0, -1.0, 0.0), Material([0, 1, 1, 1], 0.1, 1, 1))
-
-scene.append(plan)
-
-img = Image(400, 400)
-camera = Camera(Vector3(0, 0, 10), 90)
-
-TS  = []
-TS.append(scale(2, 2, 2))
-TS.append(translate(0,10, -10) @ scale(10, 3, 3))
-TS.append(translate(0, 10, -10) @ rotz(45 * math.pi/180.0) @ scale(10, 3, 3))
-TS.append(translate(1, 3, -10) @ scale(4, 1, 1))
-TS.append(scale(4, 1, 1) @ translate(1, 3, -10))
-
-i = 0
-for t in TS:
-    img = raycasting(img, camera, scene)
-    save_img(f"output_{i}.ppm", img)
-    i += 1
-    scene[0].model = t
-
-img = raycasting(img, camera, scene)
-save_img(f"output_{i}.ppm", img)
+#light = Light(Vector3(0, 10, -50), [0.9, 0.9, 0.9, 1])
+#envlight = [1, 1, 1, 1]
+#scene = [Sphere("esfera", Vector3(0, 0, 0), 1, Material([1, 0, 0, 1], 0.4, 1, 1) )]
+#plan = Plan("plano", Vector3(0, -1, 0), Vector3(0.0, -1.0, 0.0), Material([0, 1, 1, 1], 0.1, 1, 1))
+#
+#scene.append(plan)
+#
+#img = Image(400, 400)
+#camera = Camera(Vector3(0, 0, 10), 90)
+#
+#TS  = []
+#TS.append(scale(2, 2, 2))
+#TS.append(translate(0,10, -10) @ scale(10, 3, 3))
+#TS.append(translate(0, 10, -10) @ rotz(45 * math.pi/180.0) @ scale(10, 3, 3))
+#TS.append(translate(1, 3, -10) @ scale(4, 1, 1))
+#TS.append(scale(4, 1, 1) @ translate(1, 3, -10))
+#
+#i = 0
+#for t in TS:
+#    img = raycasting(img, camera, scene)
+#    save_img(f"output_{i}.ppm", img)
+#    i += 1
+#    scene[0].model = t
+#
+#img = raycasting(img, camera, scene)
+#save_img(f"output_{i}.ppm", img)
 
 #scene[0].model = scene[0].model @ scale(2, 2, 2)
 #img = raycasting(img, camera, scene)
 #save_img("output_02.ppm", img)
-
-
-
