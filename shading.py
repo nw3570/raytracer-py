@@ -1,5 +1,13 @@
 from vector import Vector3
 
+class Material:
+    def __init__(self, albedo, ka, kd, ks, ns):
+        self.albedo = albedo
+        self.ka = ka
+        self.kd = kd
+        self.ks = ks
+        self.ns = ns
+
 class Light:
     def __init__(self, position, color):
         self.position = position

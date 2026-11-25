@@ -69,7 +69,7 @@ class Vector3:
             self.x * other.y - self.y * other.x,
         )
 
-    def hadamard(other):
+    def hadamard(self, other):
         return Vector3(
             self.x * other.x,
             self.y * other.y,
