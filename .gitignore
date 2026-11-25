@@ -8,3 +8,6 @@ out/
 in/
 *.ppm
 *.obj
+
+# Arquivo para teste
+foo.py
