@@ -1,8 +1,5 @@
 from vector import Vector3
 
-FILE = 'cubotri.obj'
-
-
 def loader(path):
     vertices = []
     normals = []
