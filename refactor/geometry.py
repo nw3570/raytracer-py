@@ -55,6 +55,15 @@ def translate(dx, dy, dz):
         [0, 0, 0, 1]
     ])
 
+class Triangle:
+    def __init__(self, name, v0, v1, v2, mesh):
+        self.name = name
+        self.a = v0
+        self.b = v1
+        self.c = v2
+        self.mesh = mesh
+        self.centroid = (a + b + c) / 3
+
 class TriangularMesh:
     def __init__(self, name, v, vn, fv, fvn):
         self.name = name

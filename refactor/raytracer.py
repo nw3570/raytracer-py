@@ -1,7 +1,7 @@
 from vector import Vector3
 from wavefront import loader
 from render import Scene, SceneObject, Camera, Image, raycasting
-from geometry import Sphere, Plan, TriangularMesh
+from geometry import Sphere, Plan, Triangle, TriangularMesh
 from shading import Material, Light
 import sys
 
