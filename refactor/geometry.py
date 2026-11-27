@@ -56,24 +56,14 @@ def translate(dx, dy, dz):
     ])
 
 class Triangle:
-    def __init__(self, name, v0, v1, v2, mesh):
-        self.name = name
-        self.a = v0
-        self.b = v1
-        self.c = v2
-        self.mesh = mesh
-        self.centroid = (a + b + c) / 3
+    def __init__(self, mesh, face_idx):
+        self._mesh = mesh
+        self._face_idx = face_idx
+        self.material = self._mesh.material
 
-class TriangularMesh:
-    def __init__(self, name, v, vn, fv, fvn):
-        self.name = name
-        self.vertices = v
-        self.normals = vn
-        self.vertices_idx = fv
-        self.normals_idx = fvn
+    def _moller_trumbore(self, ray):
+        a, b, c = self._mesh.vertices[self._face_idx]
 
-    @staticmethod
-    def _moller_trumbore(ray, a, b, c):
         edge1 = b - a
         edge2 = c - a
 
@@ -99,37 +89,30 @@ class TriangularMesh:
         t = inv_det * edge2.dot(q)
         return u, v, t
 
+    def centroid(self):
+        v0, v1, v2 = self._mesh.vertices[self._face_idx]
+        return (v0 + v1 + v2) / 3.0
 
     def hit(self, ray):
-        nfaces = len(self.vertices_idx) // 3
-        hits = []
+        res = self._moller_trumbore(ray)
+        
+        if res is None:
+            return []
+        
+        u, v, t = res
+        w = 1.0 - u - v
 
-        for i in range(0, nfaces):
-            idx_start = 3 * i
-            idx_end = idx_start + 3
+        n0, n1, n2 = self._mesh.normals[self._face_idx]
+        normal = (u * n1 + v * n2 + w * n0).normalized()
 
-            v0, v1, v2 = self.vertices_idx[idx_start : idx_end]
-            res = TriangularMesh._moller_trumbore(
-                ray,
-                self.vertices[v0], self.vertices[v1], self.vertices[v2]
-            )
+        return [Hit(t, ray.at(t), normal)]
 
-            if res is None:
-                continue
-
-            u, v, t = res
-            w = 1.0 - u - v
-
-            n0, n1, n2 = self.normals_idx[idx_start : idx_end]
-            normal = (
-                u * self.normals[n1]
-                + v * self.normals[n2]
-                + w * self.normals[n0]
-            ).normalized()
-
-            hits.append(Hit(t, ray.at(t), normal))
-
-        return hits
+class TriangularMesh:
+    def __init__(self, name, vertices, normals, mat):
+        self.name = name
+        self.vertices = vertices
+        self.normals = normals
+        self.material = mat
 
 class Sphere:
     def __init__(self, name, pos, r):
